@@ -18,7 +18,7 @@
 
 dhostname = "devstack.local"
 
-Vagrant::Config.run do |config|
+Vagrant.configure("2") do |config|
 
   config.vm.define :devstack do |devstack_config|
 
@@ -26,11 +26,19 @@ Vagrant::Config.run do |config|
     devstack_config.vm.box_url = "http://files.vagrantup.com/precise64.box"
 
     # devstack_config.vm.boot_mode = :gui
-    devstack_config.vm.network  :hostonly, "10.1.2.44" #:hostonly or :bridged - default is NAT
-    devstack_config.vm.host_name = dhostname
-    devstack_config.vm.customize ["modifyvm", :id, "--memory", 1024]
+    devstack_config.vm.network  :private_network, ip: "10.1.2.44" 
+    devstack_config.vm.hostname = dhostname
     devstack_config.ssh.max_tries = 100
 
+    config.vm.provider :virtualbox do |vb|
+      # Don't boot with headless mode
+      # vb.gui = true
+    
+      # Use VBoxManage to customize the VM. For example to change memory:
+      vb.customize ["modifyvm", :id, "--memory", "2048"]
+      vb.customize ["modifyvm", :id, "--cpus", "2"]
+      vb.customize ["modifyvm", :id, "--hwvirtexexcl", "on"]
+    end
     devstack_config.vm.provision :puppet do |devstack_puppet|
       devstack_puppet.pp_path = "/tmp/vagrant-puppet"
       devstack_puppet.module_path = "modules"
